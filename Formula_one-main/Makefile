@@ -1,14 +1,23 @@
-main: main.c libs/car.h libs/display.c libs/vroum.c libs/sort.c
-	gcc libs/display.c -c
-	gcc libs/sort.c -c
-	gcc libs/vroum.c -c
-	gcc libs/csv.c -c
-	gcc main.c -lncurses display.o sort.o vroum.o csv.o -o main
+NAME    = f1
+CC        = gcc 
+FLAGS    = -Wall -Wextra -Werror -g
+
+SRCS = libs/csv.c libs/display.c libs/sort.c libs/vroum.c main.c
+
+OBJS = $(SRCS:.c=.o)
+
+all: $(OBJS)
+	$(CC) $(FLAGS) -o $(NAME) $(OBJS) -lncurses
+
+%.o: %.c
+	$(CC) $(FLAGS) -o $@ -c $<
+
 clean:
-	rm -f main
-	rm -f display.o
-	rm -f vroum.o
-	rm -f sort.o
-	rm -f csv.o
-	rm -f circuit
-	rm -f test.csv
+	rm -f $(OBJS)
+
+fclean: clean
+	rm -f $(NAME)
+
+re: fclean all
+
+.PHONY: all clean fclean re

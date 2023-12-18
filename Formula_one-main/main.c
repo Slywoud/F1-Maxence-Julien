@@ -8,6 +8,10 @@
 //TODO: add error handling/generating
 
 int main(int argc, char *argv[]) {
+    if (argc < 2 || argc > 3){
+        fprintf(stderr, "Wrong number of arguments\n");
+        return 1;
+    }
     if (argc > 1 && strcmp(argv[1], "-h") == 0) {
     // Print the help message
     printf("Usage: Formula_one [OPTION]\n");
@@ -16,7 +20,7 @@ int main(int argc, char *argv[]) {
     printf("  -sunday     start the sunday race (300-3500 km)\n");
     return 0;
     }
-    
+    // Faire une vérification d'argument
     int shmid, cpid, num_cars, shmkey = 420;
     num_cars = atoi(argv[1]);
 
@@ -30,6 +34,9 @@ int main(int argc, char *argv[]) {
     car *circuit = shmat(shmid, 0, 0);
 
     //printf("%d\n",num_cars);
+
+    static int carIds[] = {44, 63, 1, 11, 55, 16, 4, 3, 14, 31, 10, 22,
+                           5, 18, 6, 23, 77, 24, 47, 9};
 
     for (int i = 0; i < num_cars; i++) {
         init_car(&circuit[i], carIds[i]);

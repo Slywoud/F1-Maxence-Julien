@@ -8,6 +8,3 @@ typedef struct{
     bool state_pitstop;
     bool state_crash;
 }car;
-
-static int carIds[] = {44, 63, 1, 11, 55, 16, 4, 3, 14, 31, 10, 22,
-                       5, 18, 6, 23, 77, 24, 47, 9};
