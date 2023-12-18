@@ -1,0 +1,91 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/sem.h>
+#include <string.h>
+
+#define NUM_CARS 20
+
+//typedef permet de creer des elements sans repeter struct a chaque fois
+typedef struct{
+    int id;
+    float s1, s2, s3;
+    float best_s1, best_s2, best_s3;
+    float best_lap;
+    float total_time;
+}car;
+/*typedef union {
+    int               val;
+    struct semid_ds * buf;
+    unsigned short *  array;
+    struct seminfo *  __buf;
+} semun;*/
+
+//fonction pour generer temps random entre lower et upper (a ameliorer pour etre au dixieme voir centaine de seconde)
+float genTime(float lower, float upper) {
+    return (lower + (drand48() * (upper - lower)));
+}
+//fonction qui prend en parametre un pointeur vers une struct voiture et l'identifiant qu'on veut lui donner
+void init_car(car *ptr, int carId) {
+    ptr->id = carId;
+    ptr->best_s1 = 45;//initier a 45 parce que sinon on a une valeur random et 45 est le pire temps possible
+    ptr->best_s2 = 45;
+    ptr->best_s3 = 45;
+    ptr->best_lap = 45 * 3;
+    ptr->total_time = 0;
+}
+//fonction qui genere un temp pour chaque secteur et met a jour les meilleur temps pour la voiture pointer en parametre
+void lap_car(car *ptr){
+    float lap;
+
+    ptr->s1 = genTime(25,45);
+    ptr->s2 = genTime(25,45);
+    ptr->s3 = genTime(25,45);
+    lap = ptr->s1 + ptr->s2 + ptr->s3;
+
+    if(ptr->s1 < ptr->best_s1)ptr->best_s1 = ptr->s1;
+    if(ptr->s2 < ptr->best_s2)ptr->best_s2 = ptr->s2;
+    if(ptr->s3 < ptr->best_s3)ptr->best_s3 = ptr->s3;
+    if(lap < ptr->best_lap)ptr->best_lap = lap;
+    ptr->total_time = ptr->total_time + lap;
+}
+
+void race_cars(car *ptr){
+    int i = 0;
+    while(i < 5){
+        for (int i = 0; i < NUM_CARS; i++){
+            lap_car(&ptr[i]);
+        }
+        i += 1;
+    }
+}
+//liste des id des voitures, NUM_CARS est facultatif
+static int carIds[NUM_CARS] = {44, 63, 1, 11, 55, 16, 4, 3, 14, 31, 10, 22, 5, 18, 6, 23, 77, 24, 47, 9};
+
+int main(){
+    car *circuit;//cree une liste de struct car appeler cars
+    int    shmId;
+    srand48(time(0));//change le seed a une valeur dependante du temps
+
+    shmId = shmget(69, sizeof(car) * 20, IPC_CREAT | 0666);
+    circuit = (car *)shmat(shmId,0,0);
+
+    for (int i = 0; i < NUM_CARS; i++){
+        init_car(&circuit[i], carIds[i]);
+    }
+
+    race_cars(circuit);
+
+    printf("| id |   s1  |   s2  |   s3  |   lap \n|――――|―――――――|―――――――|―――――――|―――――――\n");
+
+    for (int i = 0; i < NUM_CARS; i++) {
+        //lap_car(&cars[i]);
+        printf("| %2d | %-5.4g | %-5.4g | %-5.4g | %-5.4g \n", circuit[i].id, circuit[i].s1, circuit[i].s2, circuit[i].s3, circuit[i].best_lap);
+    }
+
+    shmctl(shmId, IPC_RMID, NULL);
+    shmdt(circuit);
+}
