@@ -7,9 +7,24 @@
 //TODO: pit stop/crash
 //TODO: add error handling/generating
 
+int checkArguments(int argc, char *argv[]) {
+    if (argc != 3 || (strcmp(argv[1], "-sprint") != 0 && strcmp(argv[1], "-sunday") != 0)) {
+        fprintf(stderr, "Error: %s [-sprint | -sunday] <num_cars>\n", argv[0]);
+        return 1;
+    }
+
+    int num_cars = atoi(argv[2]);
+
+    if (num_cars < 1 || num_cars > 20) {
+        fprintf(stderr, "Error: <num_cars> must be a number between 1 and 20\n");
+        return 1;
+    }
+
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
-    if (argc < 2 || argc > 3){
-        fprintf(stderr, "Wrong number of arguments\n");
+    if (checkArguments(argc, argv) != 0){
         return 1;
     }
     if (argc > 1 && strcmp(argv[1], "-h") == 0) {
@@ -21,23 +36,29 @@ int main(int argc, char *argv[]) {
     return 0;
     }
     // Faire une vérification d'argument
-    int shmid, cpid, num_cars, shmkey = 420;
-    num_cars = atoi(argv[1]);
-
+    int shmid, cpid, num_cars= 420;
+    num_cars = atoi(argv[2]);
+    int num_iterations = 20;
+    if (strcmp(argv[1], "-sunday") == 0) {
+        num_iterations = 40;
+    }
     //display
     initscr();
     start_color();
     init_pair(1,COLOR_MAGENTA, COLOR_BLACK);
 
     //shared memory
-    shmid = shmget(shmkey, num_cars * sizeof(car), IPC_CREAT | 0666);
+    shmid = shmget(IPC_PRIVATE, num_cars * sizeof(car), IPC_CREAT | 0666);
+    if (shmid == -1)
+        exit(EXIT_FAILURE);
     car *circuit = shmat(shmid, 0, 0);
-
+    // schmat returns (void *)-1 on error
+    if (circuit == (void *)-1)
+        exit(EXIT_FAILURE);
     //printf("%d\n",num_cars);
 
     static int carIds[] = {44, 63, 1, 11, 55, 16, 4, 3, 14, 31, 10, 22,
                            5, 18, 6, 23, 77, 24, 47, 9};
-
     for (int i = 0; i < num_cars; i++) {
         init_car(&circuit[i], carIds[i]);
     }
@@ -51,7 +72,7 @@ int main(int argc, char *argv[]) {
             srand48(time(0) + child.id);
 
             //printf("[son] pid %d from [parent] pid %d and car id is %d\n", getpid(), getppid(), child.id);
-            for(int j = 0; j < 20; j++){
+            for (int j = 0; j < num_iterations; j++) {
                 sleep(1);
                 //circuit[i].s1 = j;
                 lap_car(&circuit[i]);
@@ -60,15 +81,16 @@ int main(int argc, char *argv[]) {
             exit(0);
         }
     }
-
     if(cpid != 0){
         halfdelay(5);
-        for(int i = 0; i < 20; i++) {
+        for(int i = 0; i < num_iterations; i++) {
+            //TODO: Protec the malloc
             car * buffer = malloc(num_cars * sizeof(car));
             memcpy(buffer,circuit,num_cars * sizeof(car));
             bubble_sort(buffer, num_cars);
             printw("%d\n", i);
             display_scores(buffer, num_cars);
+            //TODO: Free the memory after use
 
             getch();
             erase();
