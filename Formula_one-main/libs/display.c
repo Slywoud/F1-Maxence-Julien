@@ -21,7 +21,7 @@ void display_scores(car *circuit, int car_count){
         printw(" | %-5.4g", circuit[i].best_s1);
         printw(" | %-5.4g", circuit[i].best_s2);
         printw(" | %-5.4g", circuit[i].best_s3);
-        printw(" | %s", circuit[i].state_pitstop ? "true" : "false");
+        printw(" | %-5.1d", circuit[i].pitstop);
         printw(" | %s\n", circuit[i].state_crash ? "true" : "false");
     }
 }

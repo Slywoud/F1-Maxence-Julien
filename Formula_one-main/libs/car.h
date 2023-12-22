@@ -5,6 +5,6 @@ typedef struct{
     int has_best_s1, has_best_s2, has_best_s3;
     float best_lap;
     float total_time;
-    bool state_pitstop;
+    int pitstop;
     bool state_crash;
 }car;

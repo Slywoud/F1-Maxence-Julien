@@ -6,8 +6,8 @@ void write_to_file(char* race, char* filename, char* mode, char* separator, int 
     fpt = fopen(filename, mode);
 
     fprintf(fpt,"%s\nid%s best s1%s best s2 %s best s3 %s best lap%s total time\n",race, separator, separator, separator, separator, separator);
-    fprintf(fpt, "| id |   s1  |   s2  |   s3  | best lap | best s1 | best s2 | best s3 |\n");
-    fprintf(fpt, "|----|-------|-------|-------|----------|---------|---------|---------|\n");
+    fprintf(fpt, "| id |   s1  |   s2  |   s3  | best lap | best s1 | best s2 | best s3 | pitstop | crash \n");
+    fprintf(fpt, "|----|-------|-------|-------|----------|---------|---------|---------|---------|-------\n");
 
     for (int i = 0; i < num_cars; i++) {
         fprintf(fpt, "| %2d |", bracket[i].id);
@@ -18,6 +18,8 @@ void write_to_file(char* race, char* filename, char* mode, char* separator, int 
         fprintf(fpt, "%7.2f |", bracket[i].best_s1);
         fprintf(fpt, "%7.2f |", bracket[i].best_s2);
         fprintf(fpt, "%7.2f |", bracket[i].best_s3);
+        fprintf(fpt, "%2d |", bracket[i].pitstop);
+        fprintf(fpt, "%s |", bracket[i].state_crash ? "true" : "false");
         fprintf(fpt, "\n");
     }
     // fclose(fpt);
@@ -38,6 +40,8 @@ void fill_car(char line[], char* separator, car *temp) {
     temp->best_lap = atof(tok);
     tok = strtok(NULL, separator);
     temp->total_time = atof(tok);
+    tok = strtok(NULL, separator);
+    temp->pitstop = atof(tok);
 
     temp->s1 = 0;
     temp->s2 = 0;
@@ -45,7 +49,7 @@ void fill_car(char line[], char* separator, car *temp) {
     temp->has_best_s1 = 0;
     temp->has_best_s2 = 0;
     temp->has_best_s3 = 0;
-    temp->state_pitstop = false;
+    temp->pitstop = 0;
     temp->state_crash = false;
 }
 

@@ -26,22 +26,35 @@ void init_car(car *ptr, int carId) {
     ptr->has_best_s1 = 0;
     ptr->has_best_s2 = 0;
     ptr->has_best_s3 = 0;
-    ptr->state_pitstop = false;
+    ptr->pitstop = 0;
     ptr->state_crash = false;
 }
-void lap_car(car *ptr){
-    //TODO: pit stop / crash all cars pit at same time, no crashing implemented
-    float lap;
- 
-    ptr->s1 = genTime(25,45);
-    ptr->s2 = genTime(25,45);
-    ptr->s3 = genTime(25,45);
-    lap = ptr->s1 + ptr->s2 + ptr->s3;
-    
 
-    if(ptr->s1 < ptr->best_s1)ptr->best_s1 = ptr->s1;
-    if(ptr->s2 < ptr->best_s2)ptr->best_s2 = ptr->s2;
-    if(ptr->s3 < ptr->best_s3)ptr->best_s3 = ptr->s3;
-    if(lap < ptr->best_lap)ptr->best_lap = lap;
+void lap_car(car *ptr) {
+    // TODO: pit stop / crash all cars pit at the same time, no crashing implemented
+    float lap;
+
+    ptr->s1 = genTime(25, 45);
+    ptr->s2 = genTime(25, 45);
+    ptr->s3 = genTime(25, 45);
+    lap = ptr->s1 + ptr->s2 + ptr->s3;
+
+    if (probability(0.3)) {
+        ptr->pitstop += 1;
+    }
+
+    if (!ptr->state_crash && probability(0.05)) {
+        ptr->state_crash = true;
+    }
+
+    if (ptr->s1 < ptr->best_s1)
+        ptr->best_s1 = ptr->s1;
+    if (ptr->s2 < ptr->best_s2)
+        ptr->best_s2 = ptr->s2;
+    if (ptr->s3 < ptr->best_s3)
+        ptr->best_s3 = ptr->s3;
+    if (lap < ptr->best_lap)
+        ptr->best_lap = lap;
     ptr->total_time = ptr->total_time + lap;
 }
+
