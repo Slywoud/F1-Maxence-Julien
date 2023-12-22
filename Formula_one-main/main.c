@@ -84,13 +84,21 @@ int main(int argc, char *argv[]) {
     if(cpid != 0){
         halfdelay(5);
         for(int i = 0; i < num_iterations; i++) {
-            //TODO: Protec the malloc
             car * buffer = malloc(num_cars * sizeof(car));
+            // Malloc check
+            if (buffer == NULL) {
+                printw("Erreur d'allocation mémoire.\n");
+                // Methods used when there is an error of allocation
+                getch();
+                endwin();
+                exit(EXIT_FAILURE);
+            }
             memcpy(buffer,circuit,num_cars * sizeof(car));
             bubble_sort(buffer, num_cars);
             printw("%d\n", i);
             display_scores(buffer, num_cars);
-            //TODO: Free the memory after use
+            // Memory freed, no more leaks
+            free(buffer);
 
             getch();
             erase();

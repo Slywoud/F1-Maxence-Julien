@@ -6,22 +6,21 @@ void write_to_file(char* race, char* filename, char* mode, char* separator, int 
     fpt = fopen(filename, mode);
 
     fprintf(fpt,"%s\nid%s best s1%s best s2 %s best s3 %s best lap%s total time\n",race, separator, separator, separator, separator, separator);
+    fprintf(fpt, "| id |   s1  |   s2  |   s3  | best lap | best s1 | best s2 | best s3 |\n");
+    fprintf(fpt, "|----|-------|-------|-------|----------|---------|---------|---------|\n");
 
     for (int i = 0; i < num_cars; i++) {
-        fprintf( fpt, "%2d", bracket[i].id);
-        fprintf( fpt, "%s", separator);
-        fprintf( fpt, "%-5.4g", bracket[i].best_s1);
-        fprintf( fpt, "%s", separator);
-        fprintf( fpt, "%-5.4g", bracket[i].best_s2);
-        fprintf( fpt, "%s", separator);
-        fprintf( fpt, "%-5.4g", bracket[i].best_s3);
-        fprintf( fpt, "%s", separator);
-        fprintf( fpt, "%-5.4g", bracket[i].best_lap);
-        fprintf( fpt, "%s", separator);
-        fprintf( fpt, "%-5.4g", bracket[i].total_time);
-        fprintf( fpt, "%s", separator);
+        fprintf(fpt, "| %2d |", bracket[i].id);
+        fprintf(fpt, "%6.2f |", bracket[i].s1);
+        fprintf(fpt, "%6.2f |", bracket[i].s2);
+        fprintf(fpt, "%6.2f |", bracket[i].s3);
+        fprintf(fpt, "%8.2f |", bracket[i].best_lap);
+        fprintf(fpt, "%7.2f |", bracket[i].best_s1);
+        fprintf(fpt, "%7.2f |", bracket[i].best_s2);
+        fprintf(fpt, "%7.2f |", bracket[i].best_s3);
+        fprintf(fpt, "\n");
     }
-    fprintf(fpt, "\n");
+    // fclose(fpt);
 }
 
 void fill_car(char line[], char* separator, car *temp) {
