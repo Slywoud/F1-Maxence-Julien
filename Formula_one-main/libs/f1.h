@@ -15,6 +15,8 @@ void best_sector(car *list, int car_count);
 
 float genTime(float lower, float upper);
 
+void init_random();
+
 void init_car(car *ptr, int carId);
 
 void lap_car(car *ptr);

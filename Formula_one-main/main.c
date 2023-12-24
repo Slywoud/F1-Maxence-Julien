@@ -62,6 +62,9 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < num_cars; i++) {
         init_car(&circuit[i], carIds[i]);
     }
+    
+    // Initialize the random number generator for crash
+    init_random();
 
     for (int i = 0; i < num_cars; i++) {
         if ((cpid = fork()) == 0) {
