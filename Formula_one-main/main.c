@@ -8,8 +8,9 @@
 //TODO: add error handling/generating
 
 int checkArguments(int argc, char *argv[]) {
-    if (argc != 3 || (strcmp(argv[1], "-sprint") != 0 && strcmp(argv[1], "-sunday") != 0)) {
-        fprintf(stderr, "Error: %s [-sprint | -sunday] <num_cars>\n", argv[0]);
+    if (argc != 3 || (strcmp(argv[1], "-sprint") != 0 && strcmp(argv[1], "-race") != 0 && strcmp(argv[1], "-P1") != 0
+            && strcmp(argv[1], "-P2") != 0 && strcmp(argv[1], "-P3") != 0)) {
+        fprintf(stderr, "Error: %s [-P1 | -P2 | -P3 | -sprint | -race] <num_cars>\n", argv[0]);
         return 1;
     }
 
@@ -31,17 +32,36 @@ int main(int argc, char *argv[]) {
     // Print the help message
     printf("Usage: Formula_one [OPTION]\n");
     printf("  -h     display this help message\n");
+    printf("  -P1     start the Practise 1 session (1H)\n");
+    printf("  -P2     start the Practise 2 session (1H)\n");
+    printf("  -P3     start the Practise 3 session (1H)\n");
     printf("  -sprint     start the sprint race (100-120 km)\n");
-    printf("  -sunday     start the sunday race (300-3500 km)\n");
+    printf("  -race     start the sunday race (300-3500 km)\n");
     return 0;
     }
     // Faire une vérification d'argument
-    int shmid, cpid, num_cars= 420;
+    int shmid, cpid, num_cars;
     num_cars = atoi(argv[2]);
-    int num_iterations = 20;
-    if (strcmp(argv[1], "-sunday") == 0) {
-        num_iterations = 40;
+    
+    int num_laps;
+    char* filename;
+    if (strcmp(argv[1], "-P1") == 0) {
+        num_laps = 30;
+        filename = "P1.csv";
+    } else if (strcmp(argv[1], "-P2") == 0) {
+        num_laps = 30;
+        filename = "P2.csv";
+    } else if (strcmp(argv[1], "-P3") == 0) {
+        num_laps = 30;
+        filename = "P3.csv";
+    } else if (strcmp(argv[1], "-sprint") == 0) {
+        num_laps = 20;
+        filename = "Sprint.csv";
+    } else if (strcmp(argv[1], "-race") == 0) {
+        num_laps = 40;
+        filename = "Race.csv";
     }
+
     //display
     initscr();
     start_color();
@@ -68,14 +88,13 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < num_cars; i++) {
         if ((cpid = fork()) == 0) {
-            car child;
-            child = circuit[i];
+            car *child = &circuit[i];
 
             //generate seed for rand based on
-            srand48(time(0) + child.id);
+            srand48(time(0) + child->id);
 
             //printf("[son] pid %d from [parent] pid %d and car id is %d\n", getpid(), getppid(), child.id);
-            for (int j = 0; j < num_iterations; j++) {
+            for (int j = 0; j < num_laps; j++) {
                 sleep(1);
                 //circuit[i].s1 = j;
                 lap_car(&circuit[i]);
@@ -86,7 +105,7 @@ int main(int argc, char *argv[]) {
     }
     if(cpid != 0){
         halfdelay(5);
-        for(int i = 0; i < num_iterations; i++) {
+        for(int i = 0; i < num_laps; i++) {
             car * buffer = malloc(num_cars * sizeof(car));
             // Malloc check
             if (buffer == NULL) {
@@ -116,7 +135,11 @@ int main(int argc, char *argv[]) {
         endwin();
     }
 
-    write_to_file("p1","test.csv", "w", ";", num_cars, circuit);
+    char* filename_copy = strdup(filename);
+    char* session_name = strtok(filename_copy, ".");
+    bubble_sort(circuit, num_cars);
+    write_to_file(session_name, filename, "w", ";", num_cars, circuit);
+    free(filename_copy);
 
     //shared memory
     shmdt(circuit);
