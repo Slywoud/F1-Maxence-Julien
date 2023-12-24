@@ -1,16 +1,17 @@
 #include "f1.h"
 
+void init_random() {
+    srand48(time(0));
+}
+
 float genTime(float lower, float upper) {
     return (lower + (drand48() * (upper - lower)));
 }
 
-
 bool probability(double p) {
-    // Seed the random number generator with the current time
-    srand(time(0));
 
     // Generate a random number between 0 and 1
-    double r = (double) rand() / RAND_MAX;
+    double r = drand48();
 
     // Return true if the random number is less than p
     return r < p;
@@ -31,7 +32,12 @@ void init_car(car *ptr, int carId) {
 }
 
 void lap_car(car *ptr) {
-    // TODO: pit stop / crash all cars pit at the same time, no crashing implemented
+    
+    if (ptr->state_crash) {
+        // The car has crashed, so it can't continue racing.
+        return;
+    }
+
     float lap;
 
     ptr->s1 = genTime(25, 45);
@@ -39,11 +45,11 @@ void lap_car(car *ptr) {
     ptr->s3 = genTime(25, 45);
     lap = ptr->s1 + ptr->s2 + ptr->s3;
 
-    if (probability(0.3)) {
+    if (probability(0.1)) {
         ptr->pitstop += 1;
     }
 
-    if (!ptr->state_crash && probability(0.05)) {
+    if (!ptr->state_crash && probability(0.02)) {
         ptr->state_crash = true;
     }
 
