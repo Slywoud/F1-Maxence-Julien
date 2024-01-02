@@ -64,3 +64,52 @@ void lap_car(car *ptr) {
     ptr->total_time = ptr->total_time + lap;
 }
 
+int* read_qualified_car_ids_from_csv(char* filename, int num_qualified_cars) {
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        fprintf(stderr, "Error: Could not open file %s\n", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    int* qualified_car_ids = malloc(num_qualified_cars * sizeof(int));
+    if (!qualified_car_ids) {
+        fprintf(stderr, "Error: Could not allocate memory for qualified_car_ids\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Skip the first three lines
+    char dummy[256];
+    fgets(dummy, sizeof(dummy), file);
+    fgets(dummy, sizeof(dummy), file);
+    fgets(dummy, sizeof(dummy), file);
+    fgets(dummy, sizeof(dummy), file);
+
+    int i = 0;
+    while (i < num_qualified_cars && !feof(file)) {
+        // Read the car id directly from the file
+        fscanf(file, "| %d |", &qualified_car_ids[i]);
+        // Skip the rest of the line
+        fgets(dummy, sizeof(dummy), file);
+        i++;
+    }
+
+    fclose(file);
+    return qualified_car_ids;
+}
+
+void init_circuit_with_qualified_car_ids(car* circuit, int* qualified_car_ids, int num_qualified_cars) {
+    for (int i = 0; i < num_qualified_cars; i++) {
+        init_car(&circuit[i], qualified_car_ids[i]);
+    }
+}
+
+void run_cars_and_write_results_to_csv(car* circuit, int num_cars, int num_laps, char* filename) {
+    for (int i = 0; i < num_cars; i++) {
+        for (int j = 0; j < num_laps; j++) {
+            lap_car(&circuit[i]);
+        }
+    }
+
+    bubble_sort(circuit, num_cars);
+    write_to_file(filename, filename, "w", ";", num_cars, circuit);
+}

@@ -7,6 +7,7 @@
 #include <time.h>
 #include <string.h>
 #include <ncurses.h>
+#include <ctype.h>
 #include "car.h"
 
 void bubble_sort(car *list, int car_count);
@@ -24,3 +25,9 @@ void lap_car(car *ptr);
 void display_scores(car *circuit, int car_count);
 
 void write_to_file(char* race, char* filename, char* mode, char* separator, int num_cars, car *bracket);
+
+int* read_qualified_car_ids_from_csv(char* filename, int num_qualified_cars);
+
+void init_circuit_with_qualified_car_ids(car* circuit, int* qualified_car_ids, int num_qualified_cars);
+
+void run_cars_and_write_results_to_csv(car* circuit, int num_cars, int num_laps, char* filename);
