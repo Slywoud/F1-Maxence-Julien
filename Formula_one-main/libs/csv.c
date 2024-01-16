@@ -3,7 +3,10 @@
 void write_to_file(char* race, char* filename, char* mode, char* separator, int num_cars, car *bracket) {
     FILE *fpt;
 
-    fpt = fopen(filename, mode);
+    /* fpt = fopen(filename, mode); */
+    char filepath[256];
+    sprintf(filepath, "results/%s", filename);
+    fpt = fopen(filepath, mode);
 
     fprintf(fpt,"%s\nid%s best s1%s best s2 %s best s3 %s best lap%s total time\n",race, separator, separator, separator, separator, separator);
     fprintf(fpt, "| id |   s1  |   s2  |   s3  | best lap | best s1 | best s2 | best s3 | pitstop | crash \n");

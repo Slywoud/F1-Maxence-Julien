@@ -8,19 +8,12 @@
 //TODO: add error handling/generating
 
 int checkArguments(int argc, char *argv[]) {
-    if (argc != 3 || (strcmp(argv[1], "-sprint") != 0 && strcmp(argv[1], "-race") != 0 && strcmp(argv[1], "-P1") != 0
-            && strcmp(argv[1], "-P2") != 0 && strcmp(argv[1], "-P3") != 0)) {
-        fprintf(stderr, "Error: %s [-P1 | -P2 | -P3 | -sprint | -race] <num_cars>\n", argv[0]);
+    if (argc != 2 || (strcmp(argv[1], "-h") != 0 && strcmp(argv[1], "-P1") != 0 && strcmp(argv[1], "-P2") != 0 && strcmp(argv[1], "-P3") != 0
+            && strcmp(argv[1], "-Q1") != 0 && strcmp(argv[1], "-Q2") != 0 && strcmp(argv[1], "-Q3") != 0
+            && strcmp(argv[1], "-sprint") != 0 && strcmp(argv[1], "-race") != 0)) {
+        fprintf(stderr, "Error: %s [-P1 | -P2 | -P3 | -Q1 | -Q2 | -Q3 | -sprint | -race]\n", argv[0]);
         return 1;
     }
-
-    int num_cars = atoi(argv[2]);
-
-    if (num_cars < 1 || num_cars > 20) {
-        fprintf(stderr, "Error: <num_cars> must be a number between 1 and 20\n");
-        return 1;
-    }
-
     return 0;
 }
 
@@ -29,36 +22,68 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     if (argc > 1 && strcmp(argv[1], "-h") == 0) {
-    // Print the help message
-    printf("Usage: Formula_one [OPTION]\n");
-    printf("  -h     display this help message\n");
-    printf("  -P1     start the Practise 1 session (1H)\n");
-    printf("  -P2     start the Practise 2 session (1H)\n");
-    printf("  -P3     start the Practise 3 session (1H)\n");
-    printf("  -sprint     start the sprint race (100-120 km)\n");
-    printf("  -race     start the sunday race (300-3500 km)\n");
-    return 0;
+        // Print the help message
+        printf("Usage: Formula_one [OPTION]\n");
+        printf("  -h     display this help message\n");
+        printf("  -P1     start the Practise 1 session (1H)\n");
+        printf("  -P2     start the Practise 2 session (1H)\n");
+        printf("  -P3     start the Practise 3 session (1H)\n");
+        printf("  -Q1     start the Qualifiying 1 session (12min)\n");
+        printf("  -Q2     start the Qualifiying 2 session (10min)\n");
+        printf("  -Q3     start the Qualifiying 3 session (8min)\n");
+        printf("  -sprint     start the sprint race (100-120 km)\n");
+        printf("  -race     start the sunday race (300-3500 km)\n");
+        return 0;
     }
+
     // Faire une vérification d'argument
-    int shmid, cpid, num_cars;
-    num_cars = atoi(argv[2]);
+    int shmid, cpid;
+
+    // Initialize number of cars competing for a specific session
+    int num_cars;
+    if (strcmp(argv[1], "-Q2") == 0) {
+        num_cars = 15;
+    } else if (strcmp(argv[1], "-Q3") == 0) {
+        num_cars = 10;
+    } else {
+        num_cars = 20;
+    }
     
     int num_laps;
     char* filename;
     if (strcmp(argv[1], "-P1") == 0) {
-        num_laps = 30;
+        num_laps = 35;
         filename = "P1.csv";
     } else if (strcmp(argv[1], "-P2") == 0) {
-        num_laps = 30;
+        num_laps = 35;
         filename = "P2.csv";
     } else if (strcmp(argv[1], "-P3") == 0) {
-        num_laps = 30;
+        num_laps = 35;
         filename = "P3.csv";
+    } else if (strcmp(argv[1], "-Q1") == 0) {
+        num_laps = 7;
+        filename = "Q1.csv";
+    } else if (strcmp(argv[1], "-Q2") == 0) {
+        if (access("results/Q1.csv", F_OK) != -1) {
+            num_laps = 6;
+            filename = "Q2.csv";
+        } else {
+            fprintf(stderr, "Error: Q1 must be completed before Q2\n");
+            exit(EXIT_FAILURE);
+        }
+    } else if (strcmp(argv[1], "-Q3") == 0) {
+        if (access("results/Q2.csv", F_OK) != -1) {
+            num_laps = 5;
+            filename = "Q3.csv";
+        } else {
+            fprintf(stderr, "Error: Q2 must be completed before Q3\n");
+            exit(EXIT_FAILURE);
+        }
     } else if (strcmp(argv[1], "-sprint") == 0) {
-        num_laps = 20;
+        num_laps = 17;
         filename = "Sprint.csv";
     } else if (strcmp(argv[1], "-race") == 0) {
-        num_laps = 40;
+        num_laps = 52;
         filename = "Race.csv";
     }
 
@@ -77,8 +102,8 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     //printf("%d\n",num_cars);
 
-    static int carIds[] = {44, 63, 1, 11, 55, 16, 4, 3, 14, 31, 10, 22,
-                           5, 18, 6, 23, 77, 24, 47, 9};
+    static int carIds[] = {1, 11, 16, 55, 63, 44, 31, 10, 4, 81, 77, 24,
+                            14, 18, 20, 27, 22, 3, 23, 2};
     for (int i = 0; i < num_cars; i++) {
         init_car(&circuit[i], carIds[i]);
     }
@@ -135,11 +160,23 @@ int main(int argc, char *argv[]) {
         endwin();
     }
 
-    char* filename_copy = strdup(filename);
+    /* char* filename_copy = strdup(filename);
     char* session_name = strtok(filename_copy, ".");
     bubble_sort(circuit, num_cars);
     write_to_file(session_name, filename, "w", ";", num_cars, circuit);
-    free(filename_copy);
+    free(filename_copy); */
+
+    // Lire le fichier CSV de la session précédente et initialiser le tableau circuit avec les ID des voitures qualifiées
+    if (strcmp(argv[1], "-Q2") == 0 || strcmp(argv[1], "-Q3") == 0) {
+        int num_qualified_cars = (strcmp(argv[1], "-Q2") == 0) ? 15 : 10;
+        int* qualified_car_ids = read_qualified_car_ids_from_csv(filename, num_qualified_cars);
+        init_circuit_with_qualified_car_ids(circuit, qualified_car_ids, num_qualified_cars);
+        free(qualified_car_ids);
+    }
+
+    // Faire courir les voitures et écrire les résultats dans le fichier CSV de la session actuelle
+    run_cars_and_write_results_to_csv(circuit, num_cars, num_laps, filename);
+
 
     //shared memory
     shmdt(circuit);
