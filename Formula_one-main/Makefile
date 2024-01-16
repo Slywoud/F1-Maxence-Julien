@@ -2,7 +2,7 @@ NAME    = f1
 CC        = gcc 
 FLAGS    = -Wall -Wextra -Werror -fsanitize=address -g
 
-SRCS = libs/csv.c libs/display.c libs/sort.c libs/vroum.c main.c
+SRCS = libs/csv.c libs/display.c libs/sort.c libs/logic.c main.c
 
 OBJS = $(SRCS:.c=.o)
 
