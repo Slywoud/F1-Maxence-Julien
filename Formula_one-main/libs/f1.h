@@ -10,6 +10,10 @@
 #include <ctype.h>
 #include "car.h"
 
+int init_num_cars(char* arg);
+
+void determine_race_parameters(char* arg, int* num_laps, char** filename);
+
 void bubble_sort(car *list, int car_count);
 
 void best_sector(car *list, int car_count);

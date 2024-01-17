@@ -1,12 +1,18 @@
 #include "libs/f1.h"
 
 //TODO: different behaviour based on type of race (Q1-3, P1-3, s)
-//TODO: saving results to csv
 //TODO: starting cars based on results
-//TODO: concurrence
-//TODO: pit stop/crash
-//TODO: add error handling/generating
+//TODO: award points for world championship
 
+/**
+ * This function checks the command-line arguments passed to the program.
+ * It expects exactly one argument, which must be one of the following options:
+ * "-h", "-P1", "-P2", "-P3", "-Q1", "-Q2", "-Q3", "-sprint", "-race".
+ * 
+ * @param argc The number of command-line arguments.
+ * @param argv The array of command-line arguments.
+ * @return 0 if the arguments are valid, 1 otherwise.
+ */
 int checkArguments(int argc, char *argv[]) {
     if (argc != 2 || (strcmp(argv[1], "-h") != 0 && strcmp(argv[1], "-P1") != 0 && strcmp(argv[1], "-P2") != 0 && strcmp(argv[1], "-P3") != 0
             && strcmp(argv[1], "-Q1") != 0 && strcmp(argv[1], "-Q2") != 0 && strcmp(argv[1], "-Q3") != 0
@@ -17,93 +23,67 @@ int checkArguments(int argc, char *argv[]) {
     return 0;
 }
 
+/**
+ * This function displays the help message for the program.
+ */
+void displayHelpMessage() {
+    printf("Usage: ./f1 [OPTION]\n");
+    printf("  -h     display this help message\n");
+    printf("  -P1     start the Practise 1 session (1H)\n");
+    printf("  -P2     start the Practise 2 session (1H)\n");
+    printf("  -P3     start the Practise 3 session (1H)\n");
+    printf("  -Q1     start the Qualifiying 1 session (12min)\n");
+    printf("  -Q2     start the Qualifiying 2 session (10min)\n");
+    printf("  -Q3     start the Qualifiying 3 session (8min)\n");
+    printf("  -sprint     start the sprint race (100-120 km)\n");
+    printf("  -race     start the sunday race (300-3500 km)\n");
+}
+
 int main(int argc, char *argv[]) {
+
+    // Check the command-line arguments using the checkArguments function.
     if (checkArguments(argc, argv) != 0){
         return 1;
     }
+
+    // If the first argument is "-h", display a help message
     if (argc > 1 && strcmp(argv[1], "-h") == 0) {
-        // Print the help message
-        printf("Usage: Formula_one [OPTION]\n");
-        printf("  -h     display this help message\n");
-        printf("  -P1     start the Practise 1 session (1H)\n");
-        printf("  -P2     start the Practise 2 session (1H)\n");
-        printf("  -P3     start the Practise 3 session (1H)\n");
-        printf("  -Q1     start the Qualifiying 1 session (12min)\n");
-        printf("  -Q2     start the Qualifiying 2 session (10min)\n");
-        printf("  -Q3     start the Qualifiying 3 session (8min)\n");
-        printf("  -sprint     start the sprint race (100-120 km)\n");
-        printf("  -race     start the sunday race (300-3500 km)\n");
+        displayHelpMessage();
         return 0;
     }
 
-    // Faire une vérification d'argument
+    // Declare integer variables to hold the shared memory ID (shmid) and child process ID (cpid)
     int shmid, cpid;
 
-    // Initialize number of cars competing for a specific session
-    int num_cars;
-    if (strcmp(argv[1], "-Q2") == 0) {
-        num_cars = 15;
-    } else if (strcmp(argv[1], "-Q3") == 0) {
-        num_cars = 10;
-    } else {
-        num_cars = 20;
-    }
+    // Initialize the number that will participate to the session
+    int num_cars = init_num_cars(argv[1]);
     
+    // Declare an integer to hold the number of laps and a char pointer for the name of the file were the results of sessions will be saved
     int num_laps;
     char* filename;
-    if (strcmp(argv[1], "-P1") == 0) {
-        num_laps = 35;
-        filename = "P1.csv";
-    } else if (strcmp(argv[1], "-P2") == 0) {
-        num_laps = 35;
-        filename = "P2.csv";
-    } else if (strcmp(argv[1], "-P3") == 0) {
-        num_laps = 35;
-        filename = "P3.csv";
-    } else if (strcmp(argv[1], "-Q1") == 0) {
-        num_laps = 7;
-        filename = "Q1.csv";
-    } else if (strcmp(argv[1], "-Q2") == 0) {
-        if (access("results/Q1.csv", F_OK) != -1) {
-            num_laps = 6;
-            filename = "Q2.csv";
-        } else {
-            fprintf(stderr, "Error: Q1 must be completed before Q2\n");
-            exit(EXIT_FAILURE);
-        }
-    } else if (strcmp(argv[1], "-Q3") == 0) {
-        if (access("results/Q2.csv", F_OK) != -1) {
-            num_laps = 5;
-            filename = "Q3.csv";
-        } else {
-            fprintf(stderr, "Error: Q2 must be completed before Q3\n");
-            exit(EXIT_FAILURE);
-        }
-    } else if (strcmp(argv[1], "-sprint") == 0) {
-        num_laps = 17;
-        filename = "Sprint.csv";
-    } else if (strcmp(argv[1], "-race") == 0) {
-        num_laps = 52;
-        filename = "Race.csv";
-    }
+    // This function will set the values of num_laps and filename based on the command-line argument.
+    determine_race_parameters(argv[1], &num_laps, &filename);
 
-    //display
+    // For a better display : initialize the ncurses library, start color functionality and Initialize a color pair with the number 1
     initscr();
     start_color();
-    init_pair(1,COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(1, COLOR_MAGENTA, COLOR_BLACK);
 
-    //shared memory
+    // Create a shared memory. Size = the number of cars * the size of 1 car. Read and write permissions for everyone.
     shmid = shmget(IPC_PRIVATE, num_cars * sizeof(car), IPC_CREAT | 0666);
     if (shmid == -1)
         exit(EXIT_FAILURE);
+
+    // Attach the shared memory segment to our address space(car *circuit) using shmat.
     car *circuit = shmat(shmid, 0, 0);
-    // schmat returns (void *)-1 on error
     if (circuit == (void *)-1)
         exit(EXIT_FAILURE);
-    //printf("%d\n",num_cars);
 
+    // Declare an array of car IDs. These are the IDs of the drivers.
     static int carIds[] = {1, 11, 16, 55, 63, 44, 31, 10, 4, 81, 77, 24,
-                            14, 18, 20, 27, 22, 3, 23, 2};
+                                14, 18, 20, 27, 22, 3, 23, 2};
+
+    // Initialize each car
     for (int i = 0; i < num_cars; i++) {
         init_car(&circuit[i], carIds[i]);
     }
@@ -111,7 +91,9 @@ int main(int argc, char *argv[]) {
     // Initialize the random number generator for crash
     init_random();
 
+    // Loop over the number of cars and create a new process for each car using fork
     for (int i = 0; i < num_cars; i++) {
+        // Child
         if ((cpid = fork()) == 0) {
             car *child = &circuit[i];
 
@@ -128,6 +110,7 @@ int main(int argc, char *argv[]) {
             exit(0);
         }
     }
+    // Parent
     if(cpid != 0){
         halfdelay(5);
         for(int i = 0; i < num_laps; i++) {
@@ -140,6 +123,7 @@ int main(int argc, char *argv[]) {
                 endwin();
                 exit(EXIT_FAILURE);
             }
+            // Copy the cars from the circuit to the buffer
             memcpy(buffer,circuit,num_cars * sizeof(car));
             bubble_sort(buffer, num_cars);
             printw("%d\n", i);
@@ -152,7 +136,7 @@ int main(int argc, char *argv[]) {
             refresh();
         }
 
-        //shared memory
+        // Detach the shared memory segment (circuit) from our address space
         shmctl(shmid, IPC_RMID, NULL);
 
         //display
@@ -160,13 +144,10 @@ int main(int argc, char *argv[]) {
         endwin();
     }
 
-    /* char* filename_copy = strdup(filename);
-    char* session_name = strtok(filename_copy, ".");
-    bubble_sort(circuit, num_cars);
-    write_to_file(session_name, filename, "w", ";", num_cars, circuit);
-    free(filename_copy); */
-
-    // Lire le fichier CSV de la session précédente et initialiser le tableau circuit avec les ID des voitures qualifiées
+    //Only for Q2 and Q3 session.
+    // Determine the number of qualified cars based on the session
+    // Read the IDs of the qualified cars from the CSV file of the previous session
+    // Initialize the circuit with the qualified cars
     if (strcmp(argv[1], "-Q2") == 0 || strcmp(argv[1], "-Q3") == 0) {
         int num_qualified_cars = (strcmp(argv[1], "-Q2") == 0) ? 15 : 10;
         int* qualified_car_ids = read_qualified_car_ids_from_csv(filename, num_qualified_cars);
@@ -174,11 +155,9 @@ int main(int argc, char *argv[]) {
         free(qualified_car_ids);
     }
 
-    // Faire courir les voitures et écrire les résultats dans le fichier CSV de la session actuelle
     run_cars_and_write_results_to_csv(circuit, num_cars, num_laps, filename);
 
-
-    //shared memory
+    // Detach the shared memory segment (circuit) from our address space
     shmdt(circuit);
 
     exit(0);

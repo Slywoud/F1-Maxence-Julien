@@ -1,13 +1,29 @@
 #include "f1.h"
 
+/**
+ * Initialize the random number generator with the current time as the seed.
+ */
 void init_random() {
     srand48(time(0));
 }
 
+/**
+ * Generate a random float between a lower and upper bound.
+ *
+ * @param lower The lower bound.
+ * @param upper The upper bound.
+ * @return A random float between the lower and upper bound.
+ */
 float genTime(float lower, float upper) {
     return (lower + (drand48() * (upper - lower)));
 }
 
+/**
+ * Return true with a probability of p.
+ *
+ * @param p The probability.
+ * @return True with a probability of p, false otherwise.
+ */
 bool probability(double p) {
 
     // Generate a random number between 0 and 1
@@ -17,9 +33,15 @@ bool probability(double p) {
     return r < p;
 }
 
+/**
+ * Initialize a car with a given ID.
+ *
+ * @param ptr A pointer to the car to initialize.
+ * @param carId The ID to assign to the car.
+ */
 void init_car(car *ptr, int carId) {
     ptr->id = carId;
-    ptr->best_s1 = 45;//initier a 45 parce que sinon on a une valeur random et 45 est le pire temps possible
+    ptr->best_s1 = 45;// 45 because we have to provide a value and 45 is the worst time for a sector
     ptr->best_s2 = 45;
     ptr->best_s3 = 45;
     ptr->best_lap = 45 * 3;
@@ -31,6 +53,77 @@ void init_car(car *ptr, int carId) {
     ptr->state_crash = false;
 }
 
+/**
+ * This function initializes the number of cars based on the command-line argument.
+ *
+ * @param arg The command-line argument.
+ * @return The number of cars.
+ */
+int init_num_cars(char* arg) {
+    int num_cars;
+    if (strcmp(arg, "-Q2") == 0) {
+        num_cars = 15;
+    } else if (strcmp(arg, "-Q3") == 0) {
+        num_cars = 10;
+    } else {
+        num_cars = 20;
+    }
+    return num_cars;
+}
+
+/**
+ * This function determines the number of laps and the filename based on the command-line argument.
+ *
+ * @param arg The command-line argument.
+ * @param num_laps Pointer to the variable where the number of laps will be stored.
+ * @param filename Pointer to the variable where the filename will be stored.
+ */
+void determine_race_parameters(char* arg, int* num_laps, char** filename) {
+    if (strcmp(arg, "-P1") == 0) {
+        *num_laps = 35;
+        *filename = "P1.csv";
+    } else if (strcmp(arg, "-P2") == 0) {
+        *num_laps = 35;
+        *filename = "P2.csv";
+    } else if (strcmp(arg, "-P3") == 0) {
+        *num_laps = 35;
+        *filename = "P3.csv";
+    } else if (strcmp(arg, "-Q1") == 0) {
+        *num_laps = 7;
+        *filename = "Q1.csv";
+    } else if (strcmp(arg, "-Q2") == 0) {
+        if (access("results/Q1.csv", F_OK) != -1) {
+            *num_laps = 6;
+            *filename = "Q2.csv";
+        } else {
+            fprintf(stderr, "Error: Q1 must be completed before Q2\n");
+            exit(EXIT_FAILURE);
+        }
+    } else if (strcmp(arg, "-Q3") == 0) {
+        if (access("results/Q2.csv", F_OK) != -1) {
+            *num_laps = 5;
+            *filename = "Q3.csv";
+        } else {
+            fprintf(stderr, "Error: Q2 must be completed before Q3\n");
+            exit(EXIT_FAILURE);
+        }
+    } else if (strcmp(arg, "-sprint") == 0) {
+        *num_laps = 25;
+        *filename = "sprint.csv";
+    } else if (strcmp(arg, "-race") == 0) {
+        *num_laps = 52;
+        *filename = "race.csv";
+    } else {
+        fprintf(stderr, "Error: Invalid argument\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+/**
+ * Simulate a lap for a car.
+ *
+ * @param ptr A pointer to the car to lap.
+ */
 void lap_car(car *ptr) {
     
     if (ptr->state_crash) {
@@ -64,6 +157,13 @@ void lap_car(car *ptr) {
     ptr->total_time = ptr->total_time + lap;
 }
 
+/**
+ * Read the IDs of the qualified cars from a CSV file.
+ *
+ * @param filename The name of the CSV file.
+ * @param num_qualified_cars The number of qualified cars.
+ * @return A pointer to an array of the IDs of the qualified cars.
+ */
 int* read_qualified_car_ids_from_csv(char* filename, int num_qualified_cars) {
     char filepath[256];
     sprintf(filepath, "results/%s", filename);
@@ -108,12 +208,27 @@ int* read_qualified_car_ids_from_csv(char* filename, int num_qualified_cars) {
     return qualified_car_ids;
 }
 
+/**
+ * Read the IDs of the qualified cars from a CSV file.
+ *
+ * @param filename The name of the CSV file.
+ * @param num_qualified_cars The number of qualified cars.
+ * @return A pointer to an array of the IDs of the qualified cars.
+ */
 void init_circuit_with_qualified_car_ids(car* circuit, int* qualified_car_ids, int num_qualified_cars) {
     for (int i = 0; i < num_qualified_cars; i++) {
         init_car(&circuit[i], qualified_car_ids[i]);
     }
 }
 
+/**
+ * Run the cars for a number of laps and write the results to a CSV file.
+ *
+ * @param circuit A pointer to the array of cars.
+ * @param num_cars The number of cars.
+ * @param num_laps The number of laps.
+ * @param filename The name of the CSV file.
+ */
 void run_cars_and_write_results_to_csv(car* circuit, int num_cars, int num_laps, char* filename) {
     for (int i = 0; i < num_cars; i++) {
         for (int j = 0; j < num_laps; j++) {

@@ -1,3 +1,6 @@
+/**
+ * Structure representing a car in a race.
+ */
 typedef struct{
     int id;
     float s1, s2, s3;
