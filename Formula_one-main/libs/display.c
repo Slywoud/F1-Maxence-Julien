@@ -1,4 +1,4 @@
-#include "f1.h"
+#include "../headers/f1.h"
 
 /**
  * Display the scores of the cars in the circuit in real time.

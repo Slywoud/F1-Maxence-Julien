@@ -1,4 +1,4 @@
-#include "f1.h"
+#include "../headers/f1.h"
 
 /**
  * Initialize the random number generator with the current time as the seed.

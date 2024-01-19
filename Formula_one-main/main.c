@@ -1,4 +1,4 @@
-#include "libs/f1.h"
+#include "headers/f1.h"
 
 //TODO: different behaviour based on type of race (Q1-3, P1-3, s)
 //TODO: starting cars based on results
@@ -52,8 +52,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // Declare integer variables to hold the shared memory ID (shmid) and child process ID (cpid)
-    int shmid, cpid;
 
     // Initialize the number that will participate to the session
     int num_cars = init_num_cars(argv[1]);
@@ -64,11 +62,12 @@ int main(int argc, char *argv[]) {
     // This function will set the values of num_laps and filename based on the command-line argument.
     determine_race_parameters(argv[1], &num_laps, &filename);
 
-    // For a better display : initialize the ncurses library, start color functionality and Initialize a color pair with the number 1
+    // Initialize the ncurses library for the display of sessions in real time
     initscr();
-    start_color();
-    init_pair(1, COLOR_MAGENTA, COLOR_BLACK);
 
+    // Declare integer variables to hold the shared memory ID (shmid) and child process ID (cpid)
+    int shmid, cpid;
+    
     // Create a shared memory. Size = the number of cars * the size of 1 car. Read and write permissions for everyone.
     shmid = shmget(IPC_PRIVATE, num_cars * sizeof(car), IPC_CREAT | 0666);
     if (shmid == -1)
