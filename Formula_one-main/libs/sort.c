@@ -1,5 +1,11 @@
-#include "f1.h"
+#include "../headers/f1.h"
 
+/**
+ * Sort an array of cars in ascending order of their best lap time using the bubble sort algorithm.
+ *
+ * @param list A pointer to the array of cars to sort.
+ * @param car_count The number of cars in the array.
+ */
 void bubble_sort(car *list, int car_count){
     //TODO: optimise
     car buffer;
@@ -16,6 +22,12 @@ void bubble_sort(car *list, int car_count){
     }
 }
 
+/**
+ * Determine the cars with the best times for each sector.
+ *
+ * @param list A pointer to the array of cars.
+ * @param car_count The number of cars in the array.
+ */
 void best_sector(car *list, int car_count){
     float s1 = 45, s2 = 45, s3 = 45;
     int s1_best, s2_best, s3_best;
